@@ -9,9 +9,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Razor.Language.Intermediate;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using PWEB_Proiect.DTOs;
+using PWEB_Proiect.Entities;
 
 namespace PWEB_Proiect.Controllers
 {
@@ -27,6 +29,8 @@ namespace PWEB_Proiect.Controllers
             _context = context;
             _environment = environment;
         }
+
+        
 
         [HttpGet("get_sorted_students")]
         public async Task<IActionResult> GetSortedStudentsMD()
@@ -54,8 +58,15 @@ namespace PWEB_Proiect.Controllers
                 .ThenByDescending(u => u.Medie)
                 .ToListAsync();
 
+            for(int i = 0; i < AllStudents.Count; i++)
+                if (AllStudents[i].CurrentRoomId != null)
+                    AllStudents[i].AssignedRoom = AllStudents[i].CurrentRoomId;
+
             List<Room> rooms = await _context.Rooms.ToListAsync();
             _context.ChangeTracker.AutoDetectChangesEnabled = true;
+
+            List<User> StudentsNoPrefDisab = [];
+            List<User> StudentsNoPref = [];
 
             for (int i = 0; i < AllStudentsDisab.Count; i++)
             {
@@ -87,6 +98,9 @@ namespace PWEB_Proiect.Controllers
                     if (AllStudentsDisab[i].AssignedRoom != null)
                         break;
                 }
+
+                if (AllStudentsDisab[i].AssignedRoom == null)
+                    StudentsNoPrefDisab.Add(AllStudentsDisab[i]);
             }
 
             for (int i = 0; i < AllStudentsNoDisab.Count; i++)
@@ -97,6 +111,7 @@ namespace PWEB_Proiect.Controllers
                     string sex = "";
                     for (int k = 0; k < AllStudents.Count; k++)
                     {
+
                         if ((AllStudents[k].AssignedRoom == pref.RoomId))
                         {
                             ok++;
@@ -119,7 +134,45 @@ namespace PWEB_Proiect.Controllers
                     if (AllStudentsNoDisab[i].AssignedRoom != null)
                         break;
                 }
+
+                if (AllStudentsNoDisab[i].AssignedRoom == null)
+                    StudentsNoPref.Add(AllStudentsNoDisab[i]);
             }
+
+            var camereParter = rooms.Where(r => r.Floor == 0).ToList();
+            if(camereParter.Count > 0)
+                foreach (var plebeu in StudentsNoPrefDisab)
+                    while (true)
+                    {
+                        int camera_rnd = new Random().Next(0, camereParter.Count);
+                        int studenti_in_camera = AllStudents.Where(s => s.AssignedRoom == camereParter[camera_rnd].Id).Count();
+                        string sexul_camerei = AllStudents.Where(s => s.AssignedRoom == camereParter[camera_rnd].Id).Select(s => s.Sex).First().ToString();
+
+                        if (studenti_in_camera < camereParter[camera_rnd].Capacity && plebeu.Sex == sexul_camerei)
+                        {
+                            plebeu.AssignedRoom = camereParter[camera_rnd].Id;
+                            break;
+                        }
+                    }
+            
+
+            foreach (var plebeu in StudentsNoPref)
+                while (true)
+                {
+                    int camera_rnd = new Random().Next(0, rooms.Count);
+                    int studenti_in_camera = AllStudents.Where(s => s.AssignedRoom == rooms[camera_rnd].Id).Count();
+
+                    string? sexul_camerei = null;
+                    if(studenti_in_camera > 0)
+                        sexul_camerei = AllStudents.Where(s => s.AssignedRoom == rooms[camera_rnd].Id).Select(s => s.Sex).First().ToString();
+
+                    if (studenti_in_camera < rooms[camera_rnd].Capacity && (sexul_camerei == null || plebeu.Sex == sexul_camerei))
+                    {
+                        plebeu.AssignedRoom = rooms[camera_rnd].Id;
+                        break;
+                    }
+                }
+
 
             var changes = _context.ChangeTracker.Entries()
                 .Where(e => e.State == EntityState.Modified

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PWEB_Proiect.Entities;
+using System;
 
 public class User : BaseEntity
 {
@@ -24,6 +25,7 @@ public class User : BaseEntity
     public IEnumerable<Notifications>? ReceivedNotifications { get; set; }
     public IEnumerable<Preference> Preferences { get; set; }
     public IEnumerable<Appointment>? Appointments { get; set; }
+    public IEnumerable<Feedback>? Feedbacks { get; set; }
 
 
 }

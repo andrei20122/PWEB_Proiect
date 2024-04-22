@@ -16,9 +16,6 @@ namespace PWEB_Proiect.Configurations
             builder.Property(p => p.RoomId)
                 .IsRequired();
 
-            builder.Property(p => p.Priority)
-                .IsRequired();
-
             builder.HasOne(e => e.User)
                 .WithMany(e => e.Preferences)
                 .HasForeignKey(e => e.UserId)
