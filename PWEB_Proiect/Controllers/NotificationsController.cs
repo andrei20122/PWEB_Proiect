@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PWEB_Proiect.DTOs;
+using System.Security.Claims;
 
 namespace PWEB_Proiect.Controllers
 {
@@ -17,17 +18,21 @@ namespace PWEB_Proiect.Controllers
             _context = context;
         }
 
-
+        [Authorize]
         [HttpPost("get_notifications")]
-        public async Task<ActionResult> GetNotifications([FromBody] NotificationsRequest request)
+        public async Task<ActionResult> GetNotifications([FromBody] NotificationsRequestDTO request)
         {
+            var usernameToken = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name, null)?.Value;
+            if (usernameToken == null)
+                return Ok(new ErrorMessageDTO() { Error = "No username available" });
+
             var user = await _context.Users
                 .AsNoTracking()
                 .SingleOrDefaultAsync(u => u.Username == request.Username);
 
             if (user == null)
             {
-                return NotFound(new ErrorMessageDTO { Error = "User not found" });
+                return Ok(new ErrorMessageDTO { Error = "User not found" });
             }
 
             var notifications = await _context.Notifications
@@ -50,13 +55,17 @@ namespace PWEB_Proiect.Controllers
             return Ok(new { Notifications = filteredNotifications });
         }
 
-        
+        [Authorize(Roles ="admin")]
         [HttpPost("create_notification")]
         public async Task<ActionResult> CreateNotification([FromBody] CreateNotificationDto dto)
         {
 
+            var usernameToken = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name, null)?.Value;
+            if (usernameToken == null)
+                return Ok(new ErrorMessageDTO() { Error = "No username available" });
+
             // Find the sender's user ID based on the username
-            var senderUser = await _context.Users.SingleOrDefaultAsync(u => u.Username == dto.Username);
+            var senderUser = await _context.Users.SingleOrDefaultAsync(u => u.Username == usernameToken);
             if (senderUser == null)
             {
                 return NotFound(new { error = "User not found" });
@@ -83,6 +92,22 @@ namespace PWEB_Proiect.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Notification created successfully", notification_id = notification.Id });
+        }
+
+        [Authorize]
+        [HttpDelete("delete_notification/{id:guid}")]
+        public async Task<IActionResult> DeleteNotif(Guid id)
+        {
+            var notif = await _context.Notifications.FindAsync(id);
+            if (notif == null)
+            {
+                return Ok(new ErrorMessageDTO() { Error = "Notif not found" });
+            }
+
+            _context.Notifications.Remove(notif);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Notification deleted successfully." });
         }
 
 

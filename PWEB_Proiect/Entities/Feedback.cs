@@ -9,7 +9,7 @@
         public List<string>? Features { get; set; }
         public string? Comments { get; set; }
         public DateTime CreatedTime { get; set; }
-        public User? User { get; set; }
+        public User User { get; set; }
 
     }
 }

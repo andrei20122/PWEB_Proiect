@@ -1,6 +1,6 @@
 ﻿namespace PWEB_Proiect.DTOs
 {
-    public class UpdateProfile
+    public class UpdateProfileDTO
     {
         public string Old_username { get; set; }
         public string Firstname { get; set; }

@@ -1,6 +1,6 @@
 ﻿namespace PWEB_Proiect.DTOs
 {
-    public class UserCreateRequest
+    public class UserCreateRequestDTO
     {
         public string Username { get; set; }
         public string Password { get; set; }

@@ -50,7 +50,7 @@ namespace PWEB_Proiect.Controllers
             return Ok(new { message = "Feedback inserted successfully." });
         }
 
-        [Authorize]
+        /*[Authorize]
         [HttpGet("get_username_feedbacks")]
         public async Task<IActionResult> GetFeedbacks(string username)
         {
@@ -59,13 +59,13 @@ namespace PWEB_Proiect.Controllers
                 return Ok(new ErrorMessageDTO() { Error = "No username available" });
 
             username = usernameFromToken;
-            var user = await _context.Users.Include(u => u.Feedbacks).SingleOrDefaultAsync(u => u.Username == username);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == username);
             if (user == null)
             {
                 return NotFound(new ErrorMessageDTO { Error = "User not found" });
             }
 
-            var feedbacks = user.Feedbacks.Select(f => new
+            var feedback = user.Feedback.Select(f => new
             {
 
                 Subject = f.Subject,
@@ -75,8 +75,8 @@ namespace PWEB_Proiect.Controllers
                 CreationDate = f.CreatedTime // Presupunând că există o astfel de proprietate
             });
 
-            return Ok(feedbacks);
-        }
+            return Ok(feedback);
+        }*/
 
         [Authorize(Roles ="admin")]
         [HttpGet("get_all_feedbacks")]
@@ -109,13 +109,13 @@ namespace PWEB_Proiect.Controllers
                 return Ok(new ErrorMessageDTO() { Error = "No username available" });
 
             username = usernameFromToken;
-            var user = await _context.Users.Include(u => u.Feedbacks).SingleOrDefaultAsync(u => u.Username == username);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == username);
             if (user == null)
             {
                 return Ok(new ErrorMessageDTO() { Error = "User not found" });
             }
 
-            _context.Feedbacks.RemoveRange(user.Feedbacks!);
+            _context.Feedbacks.RemoveRange(user.Feedback);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Feedbacks deleted successfully." });

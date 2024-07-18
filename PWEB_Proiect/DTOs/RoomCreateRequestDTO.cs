@@ -1,6 +1,6 @@
 ﻿namespace PWEB_Proiect.DTOs
 {
-    public class RoomCreateRequest
+    public class RoomCreateRequestDTO
     {
         public int Capacity { get; set; }
         public string Building { get; set; }

@@ -24,7 +24,7 @@ namespace PWEB_Proiect.Controllers
         }
 
         [HttpPost("check_credentials")]
-        public ActionResult<LogInResponse> LogIn([FromBody] LogInRequest logInRequest)
+        public ActionResult<LogInResponseDTO> LogIn([FromBody] LogInRequestDTO logInRequest)
         {
             var user = _context.Users.FirstOrDefault(u => u.Username == logInRequest.Username);
             if (user == null)
@@ -58,7 +58,7 @@ namespace PWEB_Proiect.Controllers
                 expires: DateTime.Now.AddDays(15),
                 signingCredentials: creds);
 
-            LogInResponse response = new()
+            LogInResponseDTO response = new()
             {
                 Token = new JwtSecurityTokenHandler().WriteToken(token)
             };

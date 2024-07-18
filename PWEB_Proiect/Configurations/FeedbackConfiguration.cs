@@ -29,12 +29,14 @@ namespace PWEB_Proiect.Configurations
             builder.Property(f => f.CreatedTime)
                 .IsRequired();
 
-            builder.HasOne(e => e.User) // Aici se specifică o relație de unu-la-mulți.
+            /*builder.HasOne(e => e.User) // Aici se specifică o relație de unu-la-mulți.
                 .WithMany(e => e.Feedbacks) // Aici se furnizează maparea inversă pentru relația de unu-la-mulți.
                 .HasForeignKey(e => e.UserId) // Aici este specificată coloana cheii străine.
                 .HasPrincipalKey(e => e.Id) // Aici se specifică cheia referențiată în tabela referențiată.
                 .IsRequired()
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Cascade);*/
+
+            builder.HasOne(e => e.User).WithOne(u => u.Feedback).HasForeignKey<Feedback>(e => e.UserId).HasPrincipalKey<User>(e => e.Id).OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

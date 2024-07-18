@@ -1,6 +1,6 @@
 ﻿namespace PWEB_Proiect.DTOs
 {
-    public class LogInRequest
+    public class LogInRequestDTO
     {
         public string Username { get; set; } = default!;
         public string Password { get; set; } = default!;

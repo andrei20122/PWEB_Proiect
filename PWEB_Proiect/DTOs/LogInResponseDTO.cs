@@ -1,6 +1,6 @@
 ﻿namespace PWEB_Proiect.DTOs
 {
-    public class LogInResponse
+    public class LogInResponseDTO
     {
         public string Token { get; set; } = default!;
     }

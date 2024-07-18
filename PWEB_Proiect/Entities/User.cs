@@ -25,7 +25,7 @@ public class User : BaseEntity
     public IEnumerable<Notifications>? ReceivedNotifications { get; set; }
     public IEnumerable<Preference> Preferences { get; set; }
     public IEnumerable<Appointment>? Appointments { get; set; }
-    public IEnumerable<Feedback>? Feedbacks { get; set; }
+    public Feedback Feedback { get; set; }
 
 
 }

@@ -1,6 +1,6 @@
 ﻿namespace PWEB_Proiect.DTOs
 {
-    public class UsernameRequest
+    public class UsernameRequestDTO
     {
         public string Username { get; set; }
     }

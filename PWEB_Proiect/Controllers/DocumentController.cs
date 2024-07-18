@@ -30,6 +30,7 @@ namespace PWEB_Proiect.Controllers
             return Array.IndexOf(allowedExtensions, fileExtension) != -1;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> UploadDocument([FromForm] UploadFileDTO fileDTO)
         {
@@ -157,9 +158,14 @@ namespace PWEB_Proiect.Controllers
             return Ok(new { message = "Photo successfully uploaded", student_photo });
         }
 
-        [HttpGet("{username:alpha}")]
-        public async Task<ActionResult> GetDocuments(string username)
+        [Authorize]
+        [HttpGet]
+        public async Task<ActionResult> GetDocuments()
         {
+            var username = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name, null)?.Value;
+            if (username == null)
+                return Ok(new ErrorMessageDTO() { Error = "No username available" });
+
             try
             {
                 var documents = await _context.Documents
@@ -184,9 +190,9 @@ namespace PWEB_Proiect.Controllers
         }
 
         
-        [Authorize(Roles = "Admin")] // am pus rolul de admin pentru a putea face update la statusul documentului, dar cu a mic...
+        [Authorize(Roles = "admin")] // am pus rolul de admin pentru a putea face update la statusul documentului, dar cu a mic...
         [HttpPost("{documentId}")]
-        public async Task<IActionResult> UpdateDocumentStatus(string documentId, [FromBody] UpdateDocumentStatusRequest request)
+        public async Task<IActionResult> UpdateDocumentStatus(string documentId, [FromBody] UpdateDocumentStatusRequestDTO request)
         {
             if (string.IsNullOrEmpty(request.Status))
             {
@@ -215,6 +221,7 @@ namespace PWEB_Proiect.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("{username}")] // !! practic le sterge pe toate nu pe alea cu DECLINED, dar trebuie sa ma mai gandesc la asta 
         public async Task<IActionResult> DeleteDeclinedDocuments(string username)
         {

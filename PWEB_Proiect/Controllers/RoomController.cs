@@ -18,7 +18,7 @@ namespace PWEB_Proiect.Controllers
 
         [Authorize(Roles = "admin")]
         [HttpPost("create_room")]
-        public async Task<IActionResult> CreateRoom([FromBody] RoomCreateRequest roomDto)
+        public async Task<IActionResult> CreateRoom([FromBody] RoomCreateRequestDTO roomDto)
         {
             if (!ModelState.IsValid)
             {
@@ -27,7 +27,8 @@ namespace PWEB_Proiect.Controllers
             }
 
             var existingRoom = await _context.Rooms
-                .AnyAsync(r => r.Building == roomDto.Building && r.Floor == roomDto.Floor && r.Capacity == roomDto.Capacity);
+                .AnyAsync(r => r.Building == roomDto.Building && r.Floor == roomDto.Floor && r.Capacity
+                            == roomDto.Capacity && r.NrRoom == roomDto.NrRoom);
 
             if (existingRoom)
             {
@@ -49,6 +50,7 @@ namespace PWEB_Proiect.Controllers
             return Ok(new { message = "Room successfully created", id = room.Id });
         }
 
+        [Authorize]
         [HttpGet("get_rooms")]
         public async Task<IActionResult> GetRooms()
         {

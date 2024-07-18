@@ -30,8 +30,8 @@ namespace PWEB_Proiect.Controllers
             _environment = environment;
         }
 
-        
 
+        [Authorize(Roles="admin")]
         [HttpGet("get_sorted_students")]
         public async Task<IActionResult> GetSortedStudentsMD()
         {
@@ -198,6 +198,7 @@ namespace PWEB_Proiect.Controllers
 
         }
 
+        [Authorize]
         [HttpPost("insert_data_for_room")]
         public async Task<IActionResult> InsertDataForRoom([FromBody] InsertDataForRoomDTO request)
         {
@@ -241,18 +242,18 @@ namespace PWEB_Proiect.Controllers
         }
 
         // GET: Users
-        [HttpPost("get_user")]
-        public async Task<IActionResult> GetUser([FromBody] UsernameRequest request)
+        [Authorize]
+        [HttpGet("get_user")]
+        public async Task<IActionResult> GetUser()
         {
-            if (request?.Username == null)
-            {
-                return Ok(new ErrorMessageDTO() { Error = "Invalid data" });
-            }
+            var username = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name, null)?.Value;
+            if (username == null)
+                return Ok(new ErrorMessageDTO() { Error = "No username available" });
 
             try
             {
                 var user = await _context.Users
-                    .Where(u => u.Username == request.Username)
+                    .Where(u => u.Username == username)
                     .Select(u => new
                     {
                         u.Username,
@@ -293,8 +294,13 @@ namespace PWEB_Proiect.Controllers
         }
 
         [HttpPost(Name = "CreateUser")]
-        public bool CreateUser([FromBody] UserCreateRequest userData)
+        public bool CreateUser([FromBody] UserCreateRequestDTO userData)
         {
+            if (_context.Users.Any(u => u.Username == userData.Username || u.Cnp == userData.Cnp))
+            {
+                return false;
+            }
+
             var salt = GenerateSalt();
 
             string savedPasswordHash;
@@ -324,8 +330,6 @@ namespace PWEB_Proiect.Controllers
             };
 
             
-
-            
             _context.Users.Add(user);
             _context.SaveChanges();
 
@@ -333,10 +337,15 @@ namespace PWEB_Proiect.Controllers
             return true;
         }
 
-        [HttpGet("get_student_photo/{username}")]
-        public async Task<IActionResult> GetStudentPhoto(string username)
+        [Authorize]
+        [HttpPost("get_student_photo")]
+        public async Task<IActionResult> GetStudentPhoto(UsernameRequestDTO username)
         {
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Username == username);
+            var token = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name, null)?.Value;
+            if (token == null)
+                return Ok(new ErrorMessageDTO() { Error = "No token available" });
+
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Username == username.Username);
             if (user?.StudentPhoto != null)
             {
                 var webRoot = _environment.WebRootPath ?? _environment.ContentRootPath;
@@ -376,10 +385,17 @@ namespace PWEB_Proiect.Controllers
             return Ok(new { error = "User not found" });
         }
 
+        [Authorize]
         [HttpPut("update_profile")]
-        public async Task<ActionResult> UpdateProfile([FromBody] UpdateProfile updatedUser)
+        public async Task<ActionResult> UpdateProfile([FromBody] UpdateProfileDTO updatedUser)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == updatedUser.Old_username);
+            var username = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name, null)?.Value;
+            if (username == null)
+                return Ok(new ErrorMessageDTO() { Error = "No username available" });
+
+            username = updatedUser.Old_username;
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
             if (user == null)
             {
                 return Ok(new ErrorMessageDTO() { Error = "User not found" });
@@ -405,7 +421,7 @@ namespace PWEB_Proiect.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin")] // cred ca trebuia Admin cu A mare, dar vedem dupa 
+        [Authorize(Roles = "admin")] // cred ca trebuia Admin cu A mare, dar vedem dupa 
         [HttpGet("get_all_users_information")]
         public async Task<ActionResult> GetAllUsersInformation()
         {
@@ -431,7 +447,7 @@ namespace PWEB_Proiect.Controllers
                             UploadTime = d.UploadTime.ToString("o"), // ISO 8601 format
                             d.Status,
                             d.Feedback,
-                            Url = Url.Action("GetFile", "Documents", new { fileName = d.Id }) // Ajustează dacă e nevoie
+                            Url = $"{this.Request.Scheme}://{this.Request.Host}{this.Request.PathBase}/UploadedFiles/{d.Id}"
                         })
                         .ToList() // Convert to List to satisfy EF Core requirements
                 })
