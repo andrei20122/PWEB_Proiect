@@ -1,4 +1,4 @@
-# PWEB_Proiect
+# Server Student Accommodation
 Am dezvoltat în ASP.NET Core un server pentru o aplicație web care gestionează cazarea studenților în cămine.
 Sistemul oferă funcționalități complete de la aplicarea pentru locuri de cazare până la gestionarea documentelor studentilor si alocarea acestora in camere.
 
